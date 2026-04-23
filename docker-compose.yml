@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fundpilot}
+      POSTGRES_USER: ${POSTGRES_USER:-fundpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fundpilot}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/fundpilot}
+      DB_USER: ${DB_USER:-fundpilot}
+      DB_PASSWORD: ${DB_PASSWORD:-fundpilot}
+      APP_SEED_DEMO: ${APP_SEED_DEMO:-true}
+      SCORING_STRONG_BUY_THRESHOLD: ${SCORING_STRONG_BUY_THRESHOLD:-80}
+      SCORING_BUY_THRESHOLD: ${SCORING_BUY_THRESHOLD:-65}
+      SCORING_HOLD_THRESHOLD: ${SCORING_HOLD_THRESHOLD:-45}
+      SCORING_WEIGHT_RETURN1Y: ${SCORING_WEIGHT_RETURN1Y:-0.35}
+      SCORING_WEIGHT_MA: ${SCORING_WEIGHT_MA:-0.25}
+      SCORING_WEIGHT_PERCENTILE: ${SCORING_WEIGHT_PERCENTILE:-0.15}
+      SCORING_WEIGHT_DRAWDOWN: ${SCORING_WEIGHT_DRAWDOWN:-0.15}
+      SCORING_WEIGHT_BENCHMARK: ${SCORING_WEIGHT_BENCHMARK:-0.10}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
