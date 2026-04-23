@@ -8,26 +8,43 @@
 </head>
 <body>
   <header>
-    <h1>FundPilot</h1>
-    <button id="importMockBtn">Import Mock Data</button>
+    <div>
+      <h1>FundPilot</h1>
+      <p class="subtitle">Vietnam mutual fund analysis MVP</p>
+    </div>
+    <div class="header-actions">
+      <button id="resetDemoBtn" class="secondary">Reinitialize Demo</button>
+      <button id="importMockBtn">Import Mock Data</button>
+    </div>
   </header>
+
   <main>
     <section>
-      <h2>Funds</h2>
-      <table id="fundTable">
+      <div class="section-title">
+        <h2>Funds</h2>
+        <small id="fundCount"></small>
+      </div>
+      <div id="globalError" class="error hidden"></div>
+      <div id="fundLoading" class="state">Loading funds...</div>
+      <div id="fundEmpty" class="state hidden">No funds available yet. Click "Import Mock Data" to start.</div>
+      <table id="fundTable" class="hidden">
         <thead><tr><th>Code</th><th>Name</th><th>Latest NAV</th><th>Score</th><th>Signal</th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
+
     <section id="fundDetailSection" class="hidden">
       <h2>Fund Detail</h2>
       <div id="fundDetail"></div>
       <h3>Latest Signal</h3>
+      <div id="signalLoading" class="state hidden">Loading signal...</div>
       <div id="latestSignal"></div>
-      <h3>NAV History (simple chart)</h3>
+      <h3>NAV History</h3>
       <canvas id="navChart" width="800" height="280"></canvas>
     </section>
   </main>
+
+  <script src="api.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

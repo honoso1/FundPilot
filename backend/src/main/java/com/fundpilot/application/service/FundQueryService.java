@@ -1,5 +1,6 @@
 package com.fundpilot.application.service;
 
+import com.fundpilot.common.api.PagedResponse;
 import com.fundpilot.common.exception.NotFoundException;
 import com.fundpilot.infrastructure.persistence.entity.FundEntity;
 import com.fundpilot.infrastructure.persistence.entity.NavHistoryEntity;
@@ -8,10 +9,11 @@ import com.fundpilot.infrastructure.persistence.repository.FundRepository;
 import com.fundpilot.infrastructure.persistence.repository.NavHistoryRepository;
 import com.fundpilot.infrastructure.persistence.repository.SignalRepository;
 import com.fundpilot.interfaces.rest.dto.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,14 +29,16 @@ public class FundQueryService {
         this.signalRepository = signalRepository;
     }
 
-    public List<FundSummaryResponse> getFunds() {
-        return fundRepository.findAll().stream().map(f -> {
+    public PagedResponse<FundSummaryResponse> getFunds(int page, int size) {
+        Page<FundEntity> fundPage = fundRepository.findAll(PageRequest.of(page, size));
+        List<FundSummaryResponse> items = fundPage.getContent().stream().map(f -> {
             List<NavHistoryEntity> navDesc = navHistoryRepository.findByFundOrderByNavDateDesc(f);
-            BigDecimal latestNav = navDesc.isEmpty() ? null : navDesc.get(0).getNavValue();
+            BigDecimal latestNav = navDesc.isEmpty() ? null : navDesc.getFirst().getNavValue();
             SignalEntity s = signalRepository.findTopByFundOrderBySignalDateDesc(f).orElse(null);
             return new FundSummaryResponse(f.getId(), f.getCode(), f.getName(), latestNav,
                     s != null ? s.getScore() : null, s != null ? s.getLabel() : null);
-        }).sorted(Comparator.comparing(FundSummaryResponse::code)).toList();
+        }).toList();
+        return new PagedResponse<>(items, page, size, fundPage.getTotalElements(), fundPage.getTotalPages());
     }
 
     public FundDetailResponse getFund(UUID fundId) {

@@ -12,7 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -25,18 +26,31 @@ class ImportToSignalIntegrationTest {
     @Test
     void shouldImportMockThenExposeFundsAndLatestSignal() throws Exception {
         mockMvc.perform(post("/api/import/mock"))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.success").value(true));
 
         String fundsPayload = mockMvc.perform(get("/api/funds"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()", greaterThan(1)))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items.length()", greaterThan(1)))
                 .andReturn().getResponse().getContentAsString();
 
-        String firstId = JsonPath.read(fundsPayload, "$[0].id");
+        String firstId = JsonPath.read(fundsPayload, "$.data.items[0].id");
 
         mockMvc.perform(get("/api/funds/" + firstId + "/latest-signal").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.score").exists())
-                .andExpect(jsonPath("$.label").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.score").exists())
+                .andExpect(jsonPath("$.data.label").exists());
+    }
+
+    @Test
+    void shouldReturnValidationErrorEnvelopeForInvalidCsvPayload() throws Exception {
+        mockMvc.perform(post("/api/import/csv")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"csvContent\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").exists());
     }
 }

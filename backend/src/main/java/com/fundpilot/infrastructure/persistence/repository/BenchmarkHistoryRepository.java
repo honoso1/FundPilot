@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface BenchmarkHistoryRepository extends JpaRepository<BenchmarkHistoryEntity, UUID> {
     Optional<BenchmarkHistoryEntity> findByBenchmarkCodeAndBenchmarkDate(String benchmarkCode, LocalDate benchmarkDate);
     List<BenchmarkHistoryEntity> findByBenchmarkCodeOrderByBenchmarkDateAsc(String benchmarkCode);
+    List<BenchmarkHistoryEntity> findByBenchmarkCodeAndBenchmarkDateLessThanEqualOrderByBenchmarkDateAsc(String benchmarkCode, LocalDate benchmarkDate);
 }
